@@ -1,0 +1,221 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Exchange {
+  SH
+  SZ
+}
+
+enum FundType {
+  ETF
+  LOF
+  FIELD
+}
+
+enum FundCategory {
+  US_TECH
+  US_SP
+  US_OIL
+  US_BIO
+  US_CONS
+  US_GENERAL
+  HK_HSI
+  HK_HSCEI
+  HK_TECH
+  JP_NKY
+  EU_DAX
+  MIXED
+}
+
+enum Currency {
+  USD
+  HKD
+  JPY
+  EUR
+  CNY
+}
+
+enum DataSource {
+  SINA
+  YAHOO
+  CHINAMONEY
+  EASTMONEY
+}
+
+enum SignalType {
+  PREMIUM
+  DISCOUNT
+  PAIR
+}
+
+enum SignalStatus {
+  ACTIVE
+  EXPIRED
+  EXECUTED
+}
+
+enum NotifyChannel {
+  FEISHU
+  WECHAT
+  EMAIL
+}
+
+enum NotifyStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions      Session[]
+  notifications Notification[]
+  feishuConfig  FeishuConfig?
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Fund {
+  id        String        @id @default(uuid())
+  symbol    String        @unique
+  name      String
+  exchange  Exchange
+  type      FundType
+  category  FundCategory
+  currency  Currency
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+
+  prices      FundPrice[]
+  valuations  FundValuation[]
+  signals     ArbitrageSignal[]
+  pairs       FundPair[]
+}
+
+model FundPrice {
+  id          String     @id @default(uuid())
+  fundId      String
+  timestamp   DateTime
+  marketPrice Decimal    @db.Decimal(10, 4)
+  volume      BigInt?
+  turnover    Decimal?   @db.Decimal(16, 2)
+  source      DataSource
+
+  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  @@index([fundId, timestamp])
+}
+
+model ExchangeRate {
+  id        String     @id @default(uuid())
+  pair      String
+  rate      Decimal    @db.Decimal(10, 6)
+  timestamp DateTime
+  source    DataSource
+
+  @@index([pair, timestamp])
+}
+
+model IndexPrice {
+  id          String   @id @default(uuid())
+  indexSymbol String
+  price       Decimal  @db.Decimal(12, 4)
+  timestamp   DateTime
+  source      DataSource
+
+  @@index([indexSymbol, timestamp])
+}
+
+model FundValuation {
+  id                String   @id @default(uuid())
+  fundId            String
+  timestamp         DateTime
+  officialNAV       Decimal? @db.Decimal(10, 4)
+  fairNAV           Decimal? @db.Decimal(10, 4)
+  realtimeNAV       Decimal? @db.Decimal(10, 4)
+  calibrationFactor Decimal? @db.Decimal(12, 6)
+  premium           Decimal? @db.Decimal(8, 4)
+
+  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  @@index([fundId, timestamp])
+}
+
+model FundPair {
+  id                String   @id @default(uuid())
+  fundId            String
+  pairFundId        String?
+  pairIndex         String?
+  calibrationFactor Decimal? @db.Decimal(12, 6)
+  positionAdjust    Decimal? @default(1.0) @db.Decimal(10, 6)
+
+  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+}
+
+model ArbitrageSignal {
+  id             String        @id @default(uuid())
+  fundId         String
+  timestamp      DateTime
+  type           SignalType
+  premiumRate    Decimal       @db.Decimal(8, 4)
+  zScore         Decimal?      @db.Decimal(8, 4)
+  historicalMean Decimal?      @db.Decimal(8, 4)
+  historicalStd  Decimal?      @db.Decimal(8, 4)
+  costEstimate   Decimal?      @db.Decimal(8, 4)
+  netSpread      Decimal?      @db.Decimal(8, 4)
+  status         SignalStatus  @default(ACTIVE)
+
+  notifications Notification[]
+
+  fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  @@index([fundId, timestamp])
+  @@index([status])
+}
+
+model Notification {
+  id        String        @id @default(uuid())
+  signalId  String
+  userId    String
+  channel   NotifyChannel
+  content   String
+  status    NotifyStatus   @default(PENDING)
+  sentAt    DateTime?
+  readAt    DateTime?
+
+  signal ArbitrageSignal @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FeishuConfig {
+  id          String  @id @default(uuid())
+  userId      String  @unique
+  webhookUrl  String
+  isActive    Boolean @default(true)
+  threshold   Decimal @default(1.5) @db.Decimal(6, 4)
+  notifyPairs Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
