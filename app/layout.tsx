@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { TRPCProvider } from "@/components/providers/TRPCProvider";
+import { WebSocketProvider } from "@/components/providers/WebSocketProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body className="bg-slate-50 text-slate-900 antialiased">
         <AuthProvider>
-          <TRPCProvider>{children}</TRPCProvider>
+          <TRPCProvider>
+            <WebSocketProvider>{children}</WebSocketProvider>
+          </TRPCProvider>
         </AuthProvider>
       </body>
     </html>
