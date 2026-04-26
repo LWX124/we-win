@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { TRPCProvider } from "@/components/providers/TRPCProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="bg-slate-50 text-slate-900 antialiased">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <TRPCProvider>{children}</TRPCProvider>
+        </AuthProvider>
       </body>
     </html>
   );
