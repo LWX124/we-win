@@ -173,6 +173,9 @@ model FundPair {
   positionAdjust    Decimal? @default(1.0) @db.Decimal(10, 6)
 
   fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+
+  @@unique([fundId, pairIndex])
+  @@index([fundId])
 }
 
 model ArbitrageSignal {
@@ -193,6 +196,7 @@ model ArbitrageSignal {
   fund Fund @relation(fields: [fundId], references: [id], onDelete: Cascade)
   @@index([fundId, timestamp])
   @@index([status])
+  @@index([type, status])
 }
 
 model Notification {
@@ -207,6 +211,8 @@ model Notification {
 
   signal ArbitrageSignal @relation(fields: [signalId], references: [id], onDelete: Cascade)
   user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
 }
 
 model FeishuConfig {
