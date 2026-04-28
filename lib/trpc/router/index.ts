@@ -4,6 +4,7 @@ import { arbitrageRouter } from "./arbitrage";
 import { historyRouter } from "./history";
 import { settingsRouter } from "./settings";
 import { adminRouter } from "./admin";
+import { reconciliationRouter } from "./reconciliation";
 
 export const appRouter = router({
   fund: fundRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   history: historyRouter,
   settings: settingsRouter,
   admin: adminRouter,
+  reconciliation: reconciliationRouter,
 });
 
 export type AppRouter = typeof appRouter;
