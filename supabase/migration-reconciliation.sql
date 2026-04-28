@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS "ReconciliationDetail" (
   "field" TEXT NOT NULL,
   "ourValue" DECIMAL(12,4),
   "refValue" DECIMAL(12,4),
-  "diffPercent" DECIMAL(8,4),
+  "diffPercent" DECIMAL(12,4),
   "severity" TEXT NOT NULL DEFAULT 'INFO'
 );
 
