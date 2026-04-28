@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import type { Element } from "domhandler";
 
 export interface PremiumHistoryEntry {
   date: string;
@@ -34,7 +35,7 @@ function parseNumber(text: string | undefined): number | null {
   return isNaN(num) ? null : num;
 }
 
-function extractText($el: cheerio.Cheerio<cheerio.Element>): string {
+function extractText($el: cheerio.Cheerio<Element>): string {
   return $el.text().trim();
 }
 
