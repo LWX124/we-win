@@ -7,33 +7,32 @@ const navItems = [
   { href: "/funds", label: "基金列表", icon: "💰" },
   { href: "/arbitrage", label: "套利机会", icon: "🎯" },
   { href: "/history", label: "历史分析", icon: "📈" },
-  { href: "/settings", label: "设置", icon: "⚙" },
+  { href: "/reconciliation", label: "数据校对", icon: "🔍" },
+  { href: "/settings", label: "设置", icon: "⚙️" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-60 bg-white border-r border-slate-200 flex flex-col">
-      <div className="h-14 flex items-center px-4 border-b border-slate-200">
-        <Link href="/" className="font-bold text-lg text-blue-600">
-          QDII Arbitrage
-        </Link>
-      </div>
-      <nav className="flex-1 p-3 space-y-1">
+    <aside className="w-[240px] shrink-0 bg-white border-r border-[#ebedf1] flex flex-col px-4 py-6 gap-2">
+      <Link href="/" className="text-[20px] font-bold text-[#2563eb] mb-4">
+        QDII Arbitrage
+      </Link>
+      <nav className="flex flex-col gap-2">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2.5 px-3 h-10 rounded-lg text-[14px] transition-colors ${
                 isActive
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-[#eff2fe] text-[#1d58d6] font-semibold"
+                  : "text-[#4c5568] font-medium hover:bg-[#f1f3f6]"
               }`}
             >
-              <span>{item.icon}</span>
+              <span className="text-[16px]">{item.icon}</span>
               {item.label}
             </Link>
           );
