@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
-import { getAllFundSymbols, CATEGORY_PAGES, type FundEntry } from "./lib/fund-registry";
-import { parseFundDetailPage, type FundDetailData } from "./lib/html-parser";
+import { getAllFundSymbols } from "./lib/fund-registry";
+import { parseFundDetailPage } from "./lib/html-parser";
 import { compareFundData, type DiffRecord, type OurFundData } from "./lib/reconcile-core";
 import { sendFeishuNotification } from "../lib/feishu";
 import { writeFileSync, mkdirSync, existsSync } from "fs";
@@ -76,17 +76,19 @@ async function saveResults(
   durationMs: number,
 ): Promise<string> {
   const mismatchSymbols = new Set(
-    allDiffs.filter((d) => d.severity !== "INFO").map((d) => d.fundSymbol),
+    allDiffs.filter((d) => d.severity !== "INFO" && d.field !== "missing" && d.field !== "fetch_failed").map((d) => d.fundSymbol),
   );
-  const missing = allDiffs.filter((d) => d.field === "missing").length;
+  const missingSymbols = new Set(
+    allDiffs.filter((d) => d.field === "missing" || d.field === "fetch_failed").map((d) => d.fundSymbol),
+  );
 
   const { data: run, error: runErr } = await supabase
     .from("ReconciliationRun")
     .insert({
       totalFunds,
-      matchedCount: totalFunds - mismatchSymbols.size,
+      matchedCount: totalFunds - mismatchSymbols.size - missingSymbols.size,
       mismatchCount: mismatchSymbols.size,
-      missingCount: missing,
+      missingCount: missingSymbols.size,
       status: "COMPLETED",
       durationMs,
     })
@@ -140,7 +142,13 @@ function writeLocalReport(diffs: DiffRecord[], totalFunds: number, durationMs: n
 async function sendNotification(diffs: DiffRecord[], totalFunds: number): Promise<void> {
   const warnings = diffs.filter((d) => d.severity === "WARNING");
   const criticals = diffs.filter((d) => d.severity === "CRITICAL");
-  const missing = diffs.filter((d) => d.field === "missing");
+  const missing = diffs.filter((d) => d.field === "missing" || d.field === "fetch_failed");
+
+  const problemFunds = new Set([
+    ...warnings.map((d) => d.fundSymbol),
+    ...criticals.map((d) => d.fundSymbol),
+    ...missing.map((d) => d.fundSymbol),
+  ]);
 
   const webhookUrl = process.env.FEISHU_WEBHOOK_URL;
   if (!webhookUrl) {
@@ -149,7 +157,7 @@ async function sendNotification(diffs: DiffRecord[], totalFunds: number): Promis
   }
 
   let text = `校对完成：${totalFunds} 只基金\n`;
-  text += `正常: ${totalFunds - warnings.length - criticals.length - missing.length}\n`;
+  text += `正常: ${totalFunds - problemFunds.size}\n`;
 
   if (criticals.length > 0) {
     text += `\n--- CRITICAL (${criticals.length}) ---\n`;

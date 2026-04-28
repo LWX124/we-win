@@ -10,7 +10,7 @@ export const reconciliationRouter = router({
       }),
     )
     .query(async ({ input }) => {
-      const runs = await prisma.$queryRawUnsafe<
+      const runs = await prisma.$queryRaw<
         Array<{
           id: string;
           timestamp: Date;
@@ -21,17 +21,14 @@ export const reconciliationRouter = router({
           status: string;
           durationMs: number | null;
         }>
-      >(
-        `SELECT * FROM "ReconciliationRun" ORDER BY "timestamp" DESC LIMIT $1`,
-        input.limit,
-      );
+      >`SELECT * FROM "ReconciliationRun" ORDER BY "timestamp" DESC LIMIT ${input.limit}`;
       return runs;
     }),
 
   details: protectedProcedure
     .input(z.object({ runId: z.string().uuid() }))
     .query(async ({ input }) => {
-      const details = await prisma.$queryRawUnsafe<
+      const details = await prisma.$queryRaw<
         Array<{
           id: string;
           runId: string;
@@ -43,10 +40,7 @@ export const reconciliationRouter = router({
           diffPercent: number | null;
           severity: string;
         }>
-      >(
-        `SELECT * FROM "ReconciliationDetail" WHERE "runId" = $1 ORDER BY "severity" DESC, "fundSymbol" ASC`,
-        input.runId,
-      );
+      >`SELECT * FROM "ReconciliationDetail" WHERE "runId" = ${input.runId}::uuid ORDER BY "severity" DESC, "fundSymbol" ASC`;
       return details;
     }),
 });

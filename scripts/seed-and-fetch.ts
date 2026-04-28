@@ -24,7 +24,9 @@ const CATEGORY_MAP: Record<string, { dbCategory: string; currency: string }> = {
 const funds = getAllFundSymbols().map((entry) => {
   const mapping = CATEGORY_MAP[entry.category] ?? { dbCategory: "MIXED", currency: "USD" };
   const exchange = entry.symbol.startsWith("SH") ? "SH" : "SZ";
-  const type = entry.symbol.includes("ETF") ? "ETF" : "LOF";
+  // SH51xxxx and SZ159xxx are typically ETFs, SZ16xxxx are LOFs
+  const code = entry.symbol.slice(2);
+  const type = code.startsWith("51") || code.startsWith("159") ? "ETF" : "LOF";
   return {
     symbol: entry.symbol,
     name: entry.symbol, // Will be updated with real names later

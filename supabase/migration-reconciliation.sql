@@ -31,7 +31,7 @@ CREATE INDEX IF NOT EXISTS "ReconciliationDetail_runId_idx"
 CREATE INDEX IF NOT EXISTS "ReconciliationDetail_severity_idx"
   ON "ReconciliationDetail"("severity");
 
--- Allow read access
+-- RLS: read access for all, insert requires service_role key (bypasses RLS)
 ALTER TABLE "ReconciliationRun" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "ReconciliationDetail" ENABLE ROW LEVEL SECURITY;
 
@@ -39,3 +39,6 @@ CREATE POLICY "ReconciliationRun read access"
   ON "ReconciliationRun" FOR SELECT USING (true);
 CREATE POLICY "ReconciliationDetail read access"
   ON "ReconciliationDetail" FOR SELECT USING (true);
+
+-- INSERT is done via service_role key which bypasses RLS.
+-- If a non-service-role path ever needs to insert, add INSERT policies here.
